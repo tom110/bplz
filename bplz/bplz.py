@@ -9,6 +9,7 @@ import sys
 import tempfile
 import os
 import uuid
+import bplz
 
 
 class Bplz:
@@ -27,8 +28,10 @@ class Bplz:
         firefox_options = Options()
         firefox_options.add_argument('--headless')
 
+        bplzdir=os.path.dirname(bplz.__file__)
+
         browser = webdriver.Firefox(options=firefox_options,
-                                    executable_path=r"..\Lib\site-packages\bplz\geckodriver.exe")
+                                    executable_path=os.path.join(bplzdir,"geckodriver.exe"))
         browser.get(url)
 
         time.sleep(bufferTime)
@@ -55,7 +58,7 @@ class Bplz:
                                    'application/octet-stream')  # 对应header里面的content-type
 
             browser1 = webdriver.Firefox(firefox_profile=profile, options=firefox_options,
-                                         executable_path=r"..\Lib\site-packages\bplz\geckodriver.exe")
+                                        executable_path=os.path.join(bplzdir,"geckodriver.exe")) 
 
             try:
                 response = request.urlopen(req, timeout=10)
