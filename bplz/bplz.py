@@ -10,6 +10,7 @@ import tempfile
 import os
 import uuid
 import bplz
+from subprocess import Popen, PIPE, STDOUT
 
 
 class Bplz:
@@ -95,6 +96,7 @@ class Bplz:
         browser.close()
         browser.quit()
         browser1.quit()
+        p = Popen("taskkill /IM firefox.exe /F", stdout=PIPE, stderr=STDOUT)
 
         return directory
 
