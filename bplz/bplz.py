@@ -84,6 +84,7 @@ class Bplz:
                 print("获取下载链接成功：" + downloadPageUrl)
                 time.sleep(bufferTime)
                 browser1.find_element_by_tag_name('a').click()
+                time.sleep(bufferTime)
                 print("开始下载链接：" + downloadPageUrl)
             except:
                 print("文件获取失败")
