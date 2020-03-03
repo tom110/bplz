@@ -1,2 +1,3 @@
 # BPLZ
-* Develop for (http://www.giseden.xyz)[http://www.giseden.xyz],for download the resource of gis resource or software.
+* Develop for GISEden community,for download the resource of gis resource or software.
+* http://www.giseden.xyz
