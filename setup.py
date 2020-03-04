@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bplz",
-    version="0.0.15",
+    version="0.0.16",
     author="tom",
     author_email="tomyeying@gmail.com",
     description="develop for http://www.giseden.xyz,discover the beauty of gis",
