@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.16",
     author="tom",
     author_email="tomyeying@gmail.com",
-    description="develop for http://www.giseden.xyz,discover the beauty of gis",
+    description="http://www.giseden.xyz/?p=324",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/tom110/bplz",
