@@ -14,6 +14,7 @@ from subprocess import Popen, PIPE, STDOUT
 import zipfile
 from selenium.common.exceptions import WebDriverException
 import psutil
+from urllib.parse import quote, unquote
 
 
 class Bplz:
@@ -125,31 +126,49 @@ class Bplz:
             currentFilesize = 0
             success = False  # 判断任务是否完成
             for i in range(5):
-                if os.path.isfile(os.path.join(directory, readyName)) \
-                        and os.path.isfile(os.path.join(directory, readyName + ".part")):
-                    currentFilesize = os.path.getsize(os.path.join(directory, readyName + ".part"))
+                # 如果即存在文件又存在part文件，说明正在下载状态
+                if (os.path.isfile(os.path.join(directory, readyName))
+                    and os.path.isfile(os.path.join(directory, readyName + ".part"))) or \
+                        (os.path.isfile(os.path.join(directory, quote(readyName)))
+                         and os.path.isfile(os.path.join(directory, quote(readyName) + ".part"))):
+                    if os.path.isfile(os.path.join(directory, readyName + ".part")):
+                        currentFilesize = os.path.getsize(os.path.join(directory, readyName + ".part"))
+                    else:
+                        currentFilesize = os.path.getsize(os.path.join(directory, quote(readyName) + ".part"))
 
                     print("正在下载" + readyName + str(currentFilesize))
                     while currentFilesize > filesize:
                         time.sleep(bufferTime)
                         filesize = currentFilesize
                         print("正在下载" + readyName + str(currentFilesize))
-                        if os.path.isfile(os.path.join(directory, readyName + ".part")):
-                            currentFilesize = os.path.getsize(os.path.join(directory, readyName + ".part"))
+                        if os.path.isfile(os.path.join(directory, readyName + ".part")) or \
+                                os.path.isfile(os.path.join(directory, quote(readyName) + ".part")):
+                            if os.path.isfile(os.path.join(directory, readyName + ".part")):
+                                currentFilesize = os.path.getsize(os.path.join(directory, readyName + ".part"))
+                            else:
+                                currentFilesize = os.path.getsize(os.path.join(directory, quote(readyName) + ".part"))
                         else:
                             break
-                if os.path.isfile(os.path.join(directory, readyName)) \
-                        and not os.path.isfile(os.path.join(directory, readyName + ".part")):
+                # 如果只存在文件，不存在part文件，成功下载
+                if (os.path.isfile(os.path.join(directory, readyName))
+                    and not os.path.isfile(os.path.join(directory, readyName + ".part"))) or \
+                        (os.path.isfile(os.path.join(directory, quote(readyName)))
+                         and not os.path.isfile(os.path.join(directory, quote(readyName) + ".part"))):
                     print(readyName + "下载完毕")
+                    if os.path.isfile(os.path.join(directory, quote(readyName))):
+                        os.rename(os.path.join(directory, quote(readyName)), os.path.join(directory, readyName))
                     self.closeBrowser(browser1)
                     success = True
                     break
-                if not os.path.isfile(os.path.join(directory, readyName)) \
-                        and not os.path.isfile(os.path.join(directory, readyName + ".part")):
+                # 如果既不存在文件，又不存在part文件，等待下载文件开始
+                if (not os.path.isfile(os.path.join(directory, readyName))
+                    and not os.path.isfile(os.path.join(directory, readyName + ".part"))) and \
+                        (not os.path.isfile(os.path.join(directory, quote(readyName)))
+                         and not os.path.isfile(os.path.join(directory, quote(readyName) + ".part"))):
                     print("等待" + readyName + "下载任务开始")
                     time.sleep(bufferTime)
             if not success:
-                self.delFile(directory, readyName)
+                self.delFileCom(directory, readyName)
                 print(readyName + "下载任务重启")
                 self.closeBrowser(browser1)
                 self.downloadFile(firefox_options, bplzdir, bufferTime, downloadPageUrl, readyName, directory)
@@ -159,8 +178,14 @@ class Bplz:
             self.closeBrowser(browser1)
             time.sleep(bufferTime)
             print("重启" + readyName + "下载任务")
-            self.delFile(directory, readyName)
+            self.delFileCom(directory, readyName)
             self.downloadFile(firefox_options, bplzdir, bufferTime, downloadPageUrl, readyName, directory)
+
+    def delFileCom(self, directory, readyName):
+        if os.path.isfile(os.path.join(directory, quote(readyName))):
+            self.delFile(directory, quote(readyName))
+        else:
+            self.delFile(directory, readyName)
 
     def delFile(self, directory, readyName):
         if os.path.exists(os.path.join(directory, readyName + ".part")):
@@ -237,19 +262,22 @@ class Bplz:
         buftime = 2
         url = 'https://www.lanzous.com/b00t9lyqf'
         renamefolder = ""
+        renamecreate = ""
         zipFile = ""
         volumeSize = 50
-        onlyUrl=""
+        onlyUrl = ""
 
         try:
-            opts, args = getopt.getopt(argv, "hb:u:r:z:v:o:",
-                                       ["buftime=", "url=", "renamefolder=", "zipfile=", "volumesize=","onlyurl="])
+            opts, args = getopt.getopt(argv, "hb:u:r:R:z:v:o:",
+                                       ["buftime=", "url=", "renamefolder=", "renamecreate=", "zipfile=", "volumesize=",
+                                        "onlyurl="])
         except getopt.GetoptError:
             print('bplz - b 输入网页缓冲时间，单位秒，int类型,默认2秒\n' +
                   '-u 输入蓝奏云文件夹共享网址，注意网址不能有密码\n' +
                   '-r 输入蓝奏云下载文件夹路径，单独使用\n' +
+                  '-R 输入分卷压缩好的文件夹路径，单独使用\n' +
                   '-z 输入压缩文件全路径名\n' +
-                  '-v 输入压缩卷大小（单位M），蓝奏云请输入50以下整数数字\n'+
+                  '-v 输入压缩卷大小（单位M），蓝奏云请输入50以下整数数字\n' +
                   '-o 输入蓝奏云文件夹下载目录，次下载不重命名')
             sys.exit(2)
         for opt, arg in opts:
@@ -257,6 +285,7 @@ class Bplz:
                 print('bplz - b 输入网页缓冲时间，单位秒，int类型,默认2秒\n' +
                       '-u 输入蓝奏云文件夹共享网址，注意网址不能有密码\n' +
                       '-r 输入蓝奏云下载文件夹路径，单独使用\n' +
+                      '-R 输入分卷压缩好的文件夹路径，单独使用\n' +
                       '-z 输入压缩文件全路径名\n' +
                       '-v 输入压缩卷大小（单位M），蓝奏云请输入50以下整数数字\n' +
                       '-o 输入蓝奏云文件夹下载目录，次下载不重命名')
@@ -267,32 +296,39 @@ class Bplz:
                 url = arg
             elif opt in ("-r", "--renamefolder"):
                 renamefolder = arg
+            elif opt in ("-R", "--renamecreate"):
+                renamecreate = arg
             elif opt in ("-z", "--zipfile"):
                 zipFile = arg
             elif opt in ("-v", "--volumesize"):
                 volumeSize = arg
-            elif opt in ("-o","--onlyurl"):
-                onlyUrl=arg
+            elif opt in ("-o", "--onlyurl"):
+                onlyUrl = arg
 
         if len(opts) == 0:
             print('bplz - b 输入网页缓冲时间，单位秒，int类型,默认2秒\n' +
                   '-u 输入蓝奏云文件夹共享网址，注意网址不能有密码\n' +
                   '-r 输入蓝奏云下载文件夹路径，单独使用\n' +
+                  '-R 输入分卷压缩好的文件夹路径，单独使用\n' +
                   '-z 输入压缩文件全路径名\n' +
                   '-v 输入压缩卷大小（单位M），蓝奏云请输入50以下整数数字\n' +
                   '-o 输入蓝奏云文件夹下载目录，次下载不重命名')
             sys.exit()
 
         if renamefolder != "":
-            print('重命名文件夹为：' + renamefolder)
+            print('重命名蓝奏云下载文件夹为：' + renamefolder)
             self.rename(renamefolder)
+        if renamecreate != "":
+            print('重命分卷压缩好的文件夹路径为：' + renamecreate)
+            self.zip_rename(renamecreate)
         elif zipFile != "":
             print('压缩文件为' + zipFile)
-            print("分卷大小为"+str(volumeSize)+"M")
-            save_folder = self.zip_by_volume(zipFile,int(volumeSize)*1024*1024 if not isinstance(volumeSize,int) else volumeSize*1024*1024)
+            print("分卷大小为" + str(volumeSize) + "M")
+            save_folder = self.zip_by_volume(zipFile, int(volumeSize) * 1024 * 1024 if not isinstance(volumeSize,
+                                                                                                      int) else volumeSize * 1024 * 1024)
             self.zip_rename(save_folder)
-        elif onlyUrl!="":
-            print('仅下载不重命名文件夹蓝奏云网络地址为：'+onlyUrl)
+        elif onlyUrl != "":
+            print('仅下载不重命名文件夹蓝奏云网络地址为：' + onlyUrl)
             directory = self.downloadRun(int(buftime), onlyUrl)
             print(directory)
         else:
@@ -302,3 +338,4 @@ class Bplz:
             print("开始修改文件名")
             self.rename(directory)
             print("文件下载完毕，放置位置为：" + directory)
+            p = Popen("explorer " + directory, stdout=PIPE, stderr=STDOUT)

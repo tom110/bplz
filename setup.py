@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bplz",
-    version="0.0.16",
+    version="0.0.17",
     author="tom",
     author_email="tomyeying@gmail.com",
     description="http://www.giseden.xyz/?p=324",
@@ -20,9 +20,10 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-          'bs4',
-          'selenium',
-      ],
+        'bs4',
+        'selenium',
+        'psutil',
+    ],
     entry_points={
         'console_scripts': [
             'bplz=bplz:__main__'
