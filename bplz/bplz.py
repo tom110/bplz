@@ -260,7 +260,7 @@ class Bplz:
 
     def main(self, argv):
         buftime = 2
-        url = 'https://www.lanzous.com/b00t9lyqf'
+        url = 'https://www.lanzous.com/b00tbv7wb'
         renamefolder = ""
         renamecreate = ""
         zipFile = ""
