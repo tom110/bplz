@@ -62,7 +62,7 @@ class Bplz:
         filename = 1
         for ready in readys:
             filename += 1
-            readyUrl = ready.contents[0].contents[3].attrs['href']
+            readyUrl = "https://www.lanzous.com"+ready.contents[0].contents[3].attrs['href']
             readyName = ready.contents[0].contents[3].text
 
             req = request.Request(readyUrl)

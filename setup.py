@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bplz",
-    version="0.0.19",
+    version="0.0.20",
     author="tom",
     author_email="tomyeying@gmail.com",
     description="http://www.giseden.xyz/?p=324",
