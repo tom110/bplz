@@ -9,12 +9,12 @@ import sys
 import tempfile
 import os
 import uuid
-import bplz
 from subprocess import Popen, PIPE, STDOUT
 import zipfile
 from selenium.common.exceptions import WebDriverException
 import psutil
-from urllib.parse import quote, unquote
+from urllib.parse import *
+import bplz
 
 
 class Bplz:
@@ -47,6 +47,7 @@ class Bplz:
         firefox_options.add_argument('--headless')
 
         bplzdir = os.path.dirname(bplz.__file__)
+        # bplzdir = os.curdir
 
         browser = webdriver.Firefox(options=firefox_options,
                                     executable_path=os.path.join(bplzdir, "geckodriver.exe"))
@@ -60,9 +61,10 @@ class Bplz:
         browser.close()
         browser.quit()
         filename = 1
+        urlresult = urlparse(url)
         for ready in readys:
             filename += 1
-            readyUrl = "https://www.lanzous.com"+ready.contents[0].contents[3].attrs['href']
+            readyUrl = urlresult.scheme+"://"+urlresult.hostname+ "/" + ready.contents[0].contents[3].attrs['href']
             readyName = ready.contents[0].contents[3].text
 
             req = request.Request(readyUrl)
@@ -73,7 +75,7 @@ class Bplz:
             response = request.urlopen(req, timeout=10)
             singleHtml = response.read().decode("utf-8")
             singleSoup = BeautifulSoup(singleHtml, 'html.parser')
-            downloadPageUrl = "https://www.lanzous.com/" + singleSoup.find('iframe').attrs['src']
+            downloadPageUrl = urlresult.scheme+"://"+urlresult.hostname+ "/" + singleSoup.find('iframe').attrs['src']
 
             self.downloadFile(firefox_options, bplzdir, bufferTime, downloadPageUrl, readyName, directory)
 
@@ -339,3 +341,8 @@ class Bplz:
             self.rename(directory)
             print("文件下载完毕，放置位置为：" + directory)
             p = Popen("explorer " + directory, stdout=PIPE, stderr=STDOUT)
+
+
+# if __name__ == '__main__':
+#     bplz = Bplz()
+#     bplz.downloadRun(2, "https://giseden.lanzous.com/b00tisgpc")
